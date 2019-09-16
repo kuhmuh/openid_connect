@@ -1,5 +1,3 @@
-require 'json/jwt'
-
 module OpenIDConnect
   class ResponseObject
     class IdToken < ConnectObject
@@ -10,8 +8,8 @@ module OpenIDConnect
       class InvalidAudience < InvalidToken; end
 
       attr_required :iss, :sub, :aud, :exp, :iat
-      attr_optional :acr, :auth_time, :nonce, :sub_jwk, :at_hash, :c_hash
-      attr_accessor :access_token, :code
+      attr_optional :acr, :amr, :azp, :jti, :sid, :auth_time, :nonce, :sub_jwk, :at_hash, :c_hash, :s_hash, :events
+      attr_accessor :access_token, :code, :state
       alias_method :subject, :sub
       alias_method :subject=, :sub=
 
@@ -51,6 +49,9 @@ module OpenIDConnect
         if code
           self.c_hash = left_half_hash_of code, hash_length
         end
+        if state
+          self.s_hash = left_half_hash_of state, hash_length
+        end
         super
       end
 
@@ -58,7 +59,7 @@ module OpenIDConnect
 
       def left_half_hash_of(string, hash_length)
         digest = OpenSSL::Digest.new("SHA#{hash_length}").digest string
-        UrlSafeBase64.encode64 digest[0, hash_length / (2 * 8)]
+        Base64.urlsafe_encode64 digest[0, hash_length / (2 * 8)], padding: false
       end
 
       class << self

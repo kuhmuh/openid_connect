@@ -25,12 +25,12 @@ module OpenIDConnect
               :op_tos_uri
             ]
           }
-          attr_required *(uri_attributes[:required] + [
+          attr_required(*(uri_attributes[:required] + [
             :response_types_supported,
             :subject_types_supported,
             :id_token_signing_alg_values_supported
-          ])
-          attr_optional *(uri_attributes[:optional] + [
+          ]))
+          attr_optional(*(uri_attributes[:optional] + [
             :scopes_supported,
             :response_modes_supported,
             :grant_types_supported,
@@ -54,10 +54,10 @@ module OpenIDConnect
             :request_parameter_supported,
             :request_uri_parameter_supported,
             :require_request_uri_registration
-          ])
+          ]))
 
-          validates *required_attributes, presence: true
-          validates *uri_attributes.values.flatten, url: true, allow_nil: true
+          validates(*required_attributes, presence: true)
+          validates(*uri_attributes.values.flatten, url: true, allow_nil: true)
           validates :issuer, with: :validate_issuer_matching
 
           def initialize(hash)
@@ -76,7 +76,7 @@ module OpenIDConnect
             end
           end
 
-          def validate!(expected_issuer = nil)
+          def validate!
             valid? or raise ValidationFailed.new(self)
           end
 
@@ -95,7 +95,11 @@ module OpenIDConnect
 
           def validate_issuer_matching
             if expected_issuer.present? && issuer != expected_issuer
-              errors.add :issuer, 'mismatch'
+              if OpenIDConnect.validate_discovery_issuer
+                errors.add :issuer, 'mismatch'
+              else
+                OpenIDConnect.logger.warn 'ignoring issuer mismach.'
+              end
             end
           end
         end

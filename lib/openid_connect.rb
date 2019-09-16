@@ -8,6 +8,7 @@ require 'validate_url'
 require 'validate_email'
 require 'attr_required'
 require 'attr_optional'
+require 'json/jwt'
 require 'rack/oauth2'
 require 'rack/oauth2/server/authorize/error_with_connect_ext'
 require 'rack/oauth2/server/authorize/request_with_connect_params'
@@ -72,10 +73,20 @@ module OpenIDConnect
   end
   def self.http_config(&block)
     @sub_protocols.each do |klass|
-      klass.http_config &block unless klass.http_config
+      klass.http_config(&block) unless klass.http_config
     end
     @@http_config ||= block
   end
+
+  def self.validate_discovery_issuer=(boolean)
+    @@validate_discovery_issuer = boolean
+  end
+
+  def self.validate_discovery_issuer
+    @@validate_discovery_issuer
+  end
+
+  self.validate_discovery_issuer = true
 end
 
 require 'openid_connect/exception'
